@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sion - Personal Blog</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modal.css') }}">
+</head>
+<body>
+<header>
+    <nav class="navbar">
+        <div class="logo">Sion</div>
+        <ul class="menu">
+            <li><a href="#">Login</a></li>
+            <li><a href="#">Consultas</a></li>
+            <li><a href="#">Novedades</a></li>
+            <li class="dropdown">
+                <a href="#" id="openQuiz">Quiz Verses Bible</a>
+            </li>
+        </ul>
+    </nav>
+</header>
+
+<section class="content">
+    <h2>Introducción</h2>
+    <p>Este es un espacio donde compartiré artículos, noticias, ideas y pensamientos sobre temas diversos e interesantes.</p>
+</section>
+
+<div id="quizModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Configuración del Quiz</h2>
+        <input id="nombre" placeholder="Tu nombre">
+        <input id="cantidad" type="number" placeholder="Cantidad preguntas">
+        <input id="tiempo" type="number" placeholder="Tiempo (minutos)">
+        <button id="startQuiz">Enviar</button>
+    </div>
+</div>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script src="{{ url_for('static', filename='js/quiz.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Quiz Verses Bible</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    body {
+      background-color: #f0f7ff; /* Azul pastel espiritual suave */
+      font-family: Arial, sans-serif;
+      padding: 30px;
+    }
+    #quiz-container {
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      margin-bottom: 15px;
+    }
+    button {
+      padding: 10px 15px;
+      font-size: 16px;
+      margin-top: 15px;
+      background-color: #5a9cff;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    label {
+      display: block;
+      margin: 8px 0;
+    }
+    .correct { color: green; }
+    .incorrect { color: red; }
+    #result, #review {
+      background-color: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+  </style>
+</head>
+<body>
+  <div id="quiz-container">
+    <h3>Cargando quiz...</h3>
+  </div>
+  <button id="next-btn">Next</button>
+  <div id="result"></div>
+  <div id="review"></div>
+  <button onclick="window.location='/'">Volver al Home</button>
+
+  <script>
+    let quiz = JSON.parse(localStorage.getItem('quiz'));
+    let nombre = localStorage.getItem('nombre');
+    let tiempo = localStorage.getItem('tiempo');
+    let current = 0;
+    let score = 0;
+    let startTime = new Date();
+    let userAnswers = [];
+
+    function loadQuestion() {
+      if (!quiz || quiz.length === 0) {
+        document.getElementById('quiz-container').innerHTML = "<h3>No hay preguntas cargadas. Vuelve al inicio.</h3>";
+        return;
+      }
+
+      if (current < quiz.length) {
+        let q = quiz[current];
+        document.getElementById('quiz-container').innerHTML = `
+          <h3>${q.question}</h3>
+          ${q.options.map(opt => `
+            <label><input type="radio" name="answer" value="${opt}"> ${opt}</label>
+          `).join('')}
+        `;
+      } else {
+        mostrarResultadoFinal();
+      }
+    }
+
+    document.getElementById('next-btn').onclick = () => {
+      let selected = document.querySelector('input[name="answer"]:checked');
+      if(selected){
+        userAnswers.push({
+          question: quiz[current].question,
+          selected: selected.value,
+          correct: quiz[current].answer
+        });
+        if (selected.value.trim() === quiz[current].answer.trim()) score++;
+        current++;
+        loadQuestion();
+      } else {
+        alert("Por favor selecciona una respuesta antes de continuar.");
+      }
+    };
+
+    function mostrarResultadoFinal(){
+      let tiempo_usado = Math.round((new Date() - startTime) / 60000);
+
+      fetch('/submit_quiz', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre, score, total: quiz.length, tiempo_usado })
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('quiz-container').innerHTML = '';
+        document.getElementById('next-btn').style.display = 'none';
+        document.getElementById('result').innerHTML = `<h3>Tu puntaje es: ${data.score_vigesimal}/20</h3>`;
+
+        let reviewHTML = '<h3>Preguntas incorrectas y respuestas correctas:</h3>';
+        userAnswers.forEach(answer => {
+          if(answer.selected.trim() !== answer.correct.trim()){
+            reviewHTML += `
+              <div class="incorrect"><b>Pregunta:</b> ${answer.question}<br>
+              <b>Tu respuesta:</b> <span>${answer.selected}</span><br>
+              <b>Respuesta correcta:</b> <span class="correct">${answer.correct}</span></div><hr>`;
+          }
+        });
+
+        if(reviewHTML === '<h3>Preguntas incorrectas y respuestas correctas:</h3>')
+          reviewHTML += '<p>Todas tus respuestas fueron correctas. ¡Excelente trabajo!</p>';
+
+        document.getElementById('review').innerHTML = reviewHTML;
+      });
+    }
+
+    window.onload = loadQuestion;
+  </script>
+</body>
+</html>
